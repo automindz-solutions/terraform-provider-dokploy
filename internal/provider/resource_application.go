@@ -1282,12 +1282,8 @@ func updatePlanFromApplication(plan *ApplicationResourceModel, app *client.Appli
 	if app.BuildType != "" {
 		plan.BuildType = types.StringValue(app.BuildType)
 	}
-	if app.DockerfilePath != "" {
-		plan.DockerfilePath = types.StringValue(app.DockerfilePath)
-	}
-	if app.DockerContextPath != "" {
-		plan.DockerContextPath = types.StringValue(app.DockerContextPath)
-	}
+	plan.DockerfilePath = types.StringValue(app.DockerfilePath)
+	plan.DockerContextPath = types.StringValue(app.DockerContextPath)
 
 	// GitHub fields - populate both legacy and new field names
 	// Use IsNull() || IsUnknown() so imports (which set Null, not Unknown) also work
