@@ -423,14 +423,12 @@ func (r *ApplicationResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"dockerfile_path": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Path to the Dockerfile (relative to build path).",
-				Default:     stringdefault.StaticString("./Dockerfile"),
+				Description: "Path to the Dockerfile (relative to build path). Leave unset to use Dokploy defaults.",
 			},
 			"docker_context_path": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Docker build context path.",
-				Default:     stringdefault.StaticString("."),
+				Description: "Docker build context path. Leave unset to use Dokploy defaults.",
 			},
 			"docker_build_stage": schema.StringAttribute{
 				Optional:    true,
