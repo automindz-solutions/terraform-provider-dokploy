@@ -14,6 +14,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+// strPtr returns a pointer to s, or nil if s is empty.
+func strPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
 var _ resource.Resource = &ScheduleResource{}
 var _ resource.ResourceWithImportState = &ScheduleResource{}
 
@@ -129,9 +137,9 @@ func (r *ScheduleResource) Create(ctx context.Context, req resource.CreateReques
 		Command:        plan.Command.ValueString(),
 		ShellType:      plan.ShellType.ValueString(),
 		ScheduleType:   plan.ScheduleType.ValueString(),
-		ApplicationID:  plan.ApplicationID.ValueString(),
-		ComposeID:      plan.ComposeID.ValueString(),
-		ServerID:       plan.ServerID.ValueString(),
+		ApplicationID:  strPtr(plan.ApplicationID.ValueString()),
+		ComposeID:      strPtr(plan.ComposeID.ValueString()),
+		ServerID:       strPtr(plan.ServerID.ValueString()),
 		Enabled:        plan.Enabled.ValueBool(),
 		Timezone:       plan.Timezone.ValueString(),
 	}
@@ -164,14 +172,14 @@ func (r *ScheduleResource) Read(ctx context.Context, req resource.ReadRequest, r
 	state.Command = types.StringValue(schedule.Command)
 	state.ShellType = types.StringValue(schedule.ShellType)
 	state.ScheduleType = types.StringValue(schedule.ScheduleType)
-	if schedule.ApplicationID != "" {
-		state.ApplicationID = types.StringValue(schedule.ApplicationID)
+	if schedule.ApplicationID != nil && *schedule.ApplicationID != "" {
+		state.ApplicationID = types.StringValue(*schedule.ApplicationID)
 	}
-	if schedule.ComposeID != "" {
-		state.ComposeID = types.StringValue(schedule.ComposeID)
+	if schedule.ComposeID != nil && *schedule.ComposeID != "" {
+		state.ComposeID = types.StringValue(*schedule.ComposeID)
 	}
-	if schedule.ServerID != "" {
-		state.ServerID = types.StringValue(schedule.ServerID)
+	if schedule.ServerID != nil && *schedule.ServerID != "" {
+		state.ServerID = types.StringValue(*schedule.ServerID)
 	}
 	state.Enabled = types.BoolValue(schedule.Enabled)
 	state.Timezone = types.StringValue(schedule.Timezone)
@@ -193,9 +201,9 @@ func (r *ScheduleResource) Update(ctx context.Context, req resource.UpdateReques
 		Command:        plan.Command.ValueString(),
 		ShellType:      plan.ShellType.ValueString(),
 		ScheduleType:   plan.ScheduleType.ValueString(),
-		ApplicationID:  plan.ApplicationID.ValueString(),
-		ComposeID:      plan.ComposeID.ValueString(),
-		ServerID:       plan.ServerID.ValueString(),
+		ApplicationID:  strPtr(plan.ApplicationID.ValueString()),
+		ComposeID:      strPtr(plan.ComposeID.ValueString()),
+		ServerID:       strPtr(plan.ServerID.ValueString()),
 		Enabled:        plan.Enabled.ValueBool(),
 		Timezone:       plan.Timezone.ValueString(),
 	}
@@ -235,14 +243,14 @@ func (r *ScheduleResource) ImportState(ctx context.Context, req resource.ImportS
 	state.Command = types.StringValue(schedule.Command)
 	state.ShellType = types.StringValue(schedule.ShellType)
 	state.ScheduleType = types.StringValue(schedule.ScheduleType)
-	if schedule.ApplicationID != "" {
-		state.ApplicationID = types.StringValue(schedule.ApplicationID)
+	if schedule.ApplicationID != nil && *schedule.ApplicationID != "" {
+		state.ApplicationID = types.StringValue(*schedule.ApplicationID)
 	}
-	if schedule.ComposeID != "" {
-		state.ComposeID = types.StringValue(schedule.ComposeID)
+	if schedule.ComposeID != nil && *schedule.ComposeID != "" {
+		state.ComposeID = types.StringValue(*schedule.ComposeID)
 	}
-	if schedule.ServerID != "" {
-		state.ServerID = types.StringValue(schedule.ServerID)
+	if schedule.ServerID != nil && *schedule.ServerID != "" {
+		state.ServerID = types.StringValue(*schedule.ServerID)
 	}
 	state.Enabled = types.BoolValue(schedule.Enabled)
 	state.Timezone = types.StringValue(schedule.Timezone)

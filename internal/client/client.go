@@ -5751,18 +5751,18 @@ func (c *DokployClient) ListDockerContainersByAppLabel(appName, labelType, serve
 // ============================================================
 
 type Schedule struct {
-	ScheduleID     string `json:"scheduleId"`
-	Name           string `json:"name"`
-	Description    string `json:"description"`
-	CronExpression string `json:"cronExpression"`
-	Command        string `json:"command"`
-	ShellType      string `json:"shellType"`
-	ScheduleType   string `json:"scheduleType"`
-	ApplicationID  string `json:"applicationId"`
-	ComposeID      string `json:"composeId"`
-	ServerID       string `json:"serverId"`
-	Enabled        bool   `json:"enabled"`
-	Timezone       string `json:"timezone"`
+	ScheduleID     string  `json:"scheduleId"`
+	Name           string  `json:"name"`
+	Description    string  `json:"description"`
+	CronExpression string  `json:"cronExpression"`
+	Command        string  `json:"command"`
+	ShellType      string  `json:"shellType"`
+	ScheduleType   string  `json:"scheduleType"`
+	ApplicationID  *string `json:"applicationId"`
+	ComposeID      *string `json:"composeId"`
+	ServerID       *string `json:"serverId"`
+	Enabled        bool    `json:"enabled"`
+	Timezone       string  `json:"timezone"`
 }
 
 func (c *DokployClient) CreateSchedule(schedule Schedule) (*Schedule, error) {
