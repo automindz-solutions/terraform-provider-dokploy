@@ -855,7 +855,7 @@ type Application struct {
 	PreviewEnv                            string `json:"previewEnv"`
 	PreviewBuildArgs                      string `json:"previewBuildArgs"`
 	PreviewBuildSecrets                   string `json:"previewBuildSecrets"`
-	PreviewLabels                         string `json:"previewLabels"`
+	PreviewLabels                         json.RawMessage `json:"previewLabels"`
 	PreviewWildcard                       string `json:"previewWildcard"`
 	PreviewPort                           int64  `json:"previewPort"`
 	PreviewHttps                          bool   `json:"previewHttps"`
@@ -5744,4 +5744,57 @@ func (c *DokployClient) ListDockerContainersByAppLabel(appName, labelType, serve
 		return nil, err
 	}
 	return result, nil
+}
+
+// ============================================================
+// Schedule
+// ============================================================
+
+type Schedule struct {
+	ScheduleID     string `json:"scheduleId"`
+	Name           string `json:"name"`
+	Description    string `json:"description"`
+	CronExpression string `json:"cronExpression"`
+	Command        string `json:"command"`
+	ShellType      string `json:"shellType"`
+	ScheduleType   string `json:"scheduleType"`
+	ApplicationID  string `json:"applicationId"`
+	ComposeID      string `json:"composeId"`
+	ServerID       string `json:"serverId"`
+	Enabled        bool   `json:"enabled"`
+	Timezone       string `json:"timezone"`
+}
+
+func (c *DokployClient) CreateSchedule(schedule Schedule) (*Schedule, error) {
+	resp, err := c.doRequest("POST", "schedule.create", schedule)
+	if err != nil {
+		return nil, err
+	}
+	var result Schedule
+	if err := json.Unmarshal(resp, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *DokployClient) GetSchedule(scheduleID string) (*Schedule, error) {
+	resp, err := c.doRequest("GET", fmt.Sprintf("schedule.one?scheduleId=%s", url.QueryEscape(scheduleID)), nil)
+	if err != nil {
+		return nil, err
+	}
+	var result Schedule
+	if err := json.Unmarshal(resp, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *DokployClient) UpdateSchedule(schedule Schedule) error {
+	_, err := c.doRequest("POST", "schedule.update", schedule)
+	return err
+}
+
+func (c *DokployClient) DeleteSchedule(scheduleID string) error {
+	_, err := c.doRequest("POST", "schedule.delete", map[string]string{"scheduleId": scheduleID})
+	return err
 }

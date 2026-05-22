@@ -116,8 +116,8 @@ type ApplicationResourceModel struct {
 	Replicas          types.Int64  `tfsdk:"replicas"`
 	MemoryLimit       types.Int64  `tfsdk:"memory_limit"`
 	MemoryReservation types.Int64  `tfsdk:"memory_reservation"`
-	CpuLimit          types.Int64  `tfsdk:"cpu_limit"`
-	CpuReservation    types.Int64  `tfsdk:"cpu_reservation"`
+	CpuLimit          types.String `tfsdk:"cpu_limit"`
+	CpuReservation    types.String `tfsdk:"cpu_reservation"`
 	Command           types.String `tfsdk:"command"`
 	Args              types.String `tfsdk:"args"`
 
@@ -506,13 +506,13 @@ func (r *ApplicationResource) Schema(_ context.Context, _ resource.SchemaRequest
 				Optional:    true,
 				Description: "Memory reservation (soft limit) in bytes.",
 			},
-			"cpu_limit": schema.Int64Attribute{
+			"cpu_limit": schema.StringAttribute{
 				Optional:    true,
-				Description: "CPU limit in nanocores. Example: 1000000000 (1 CPU).",
+				Description: "CPU limit. Example: '0.5' (half CPU), '1' (1 CPU).",
 			},
-			"cpu_reservation": schema.Int64Attribute{
+			"cpu_reservation": schema.StringAttribute{
 				Optional:    true,
-				Description: "CPU reservation in nanocores.",
+				Description: "CPU reservation. Example: '0.25' (quarter CPU).",
 			},
 			"command": schema.StringAttribute{
 				Optional:    true,
@@ -990,10 +990,10 @@ func (r *ApplicationResource) updateGeneralSettings(appID string, plan *Applicat
 		generalApp.MemoryReservation = json.Number(fmt.Sprintf("%d", plan.MemoryReservation.ValueInt64()))
 	}
 	if !plan.CpuLimit.IsNull() && !plan.CpuLimit.IsUnknown() {
-		generalApp.CpuLimit = json.Number(fmt.Sprintf("%d", plan.CpuLimit.ValueInt64()))
+		generalApp.CpuLimit = json.Number(plan.CpuLimit.ValueString())
 	}
 	if !plan.CpuReservation.IsNull() && !plan.CpuReservation.IsUnknown() {
-		generalApp.CpuReservation = json.Number(fmt.Sprintf("%d", plan.CpuReservation.ValueInt64()))
+		generalApp.CpuReservation = json.Number(plan.CpuReservation.ValueString())
 	}
 	if !plan.Command.IsNull() && !plan.Command.IsUnknown() {
 		generalApp.Command = plan.Command.ValueString()
@@ -1296,39 +1296,40 @@ func updatePlanFromApplication(plan *ApplicationResourceModel, app *client.Appli
 	}
 
 	// GitHub fields - populate both legacy and new field names
+	// Use IsNull() || IsUnknown() so imports (which set Null, not Unknown) also work
 	if app.Repository != "" {
-		if plan.Repository.IsUnknown() {
+		if plan.Repository.IsNull() || plan.Repository.IsUnknown() {
 			plan.Repository = types.StringValue(app.Repository)
 		}
-		if plan.GithubRepository.IsUnknown() {
+		if plan.GithubRepository.IsNull() || plan.GithubRepository.IsUnknown() {
 			plan.GithubRepository = types.StringValue(app.Repository)
 		}
 	}
 	if app.Owner != "" {
-		if plan.Owner.IsUnknown() {
+		if plan.Owner.IsNull() || plan.Owner.IsUnknown() {
 			plan.Owner = types.StringValue(app.Owner)
 		}
-		if plan.GithubOwner.IsUnknown() {
+		if plan.GithubOwner.IsNull() || plan.GithubOwner.IsUnknown() {
 			plan.GithubOwner = types.StringValue(app.Owner)
 		}
 	}
 	if app.Branch != "" {
-		if plan.GithubBranch.IsUnknown() {
+		if plan.GithubBranch.IsNull() || plan.GithubBranch.IsUnknown() {
 			plan.GithubBranch = types.StringValue(app.Branch)
 		}
 	}
 	if app.BuildPath != "" {
-		if plan.BuildPath.IsUnknown() {
+		if plan.BuildPath.IsNull() || plan.BuildPath.IsUnknown() {
 			plan.BuildPath = types.StringValue(app.BuildPath)
 		}
-		if plan.GithubBuildPath.IsUnknown() {
+		if plan.GithubBuildPath.IsNull() || plan.GithubBuildPath.IsUnknown() {
 			plan.GithubBuildPath = types.StringValue(app.BuildPath)
 		}
 	}
-	if plan.GithubId.IsUnknown() && app.GithubId != "" {
+	if (plan.GithubId.IsNull() || plan.GithubId.IsUnknown()) && app.GithubId != "" {
 		plan.GithubId = types.StringValue(app.GithubId)
 	}
-	if plan.TriggerType.IsUnknown() && app.TriggerType != "" {
+	if (plan.TriggerType.IsNull() || plan.TriggerType.IsUnknown()) && app.TriggerType != "" {
 		plan.TriggerType = types.StringValue(app.TriggerType)
 	}
 
@@ -1461,10 +1462,10 @@ func updatePlanFromApplication(plan *ApplicationResourceModel, app *client.Appli
 	if app.PreviewCustomCertResolver != "" {
 		plan.PreviewCustomCertResolver = types.StringValue(app.PreviewCustomCertResolver)
 	}
-	// Parse PreviewLabels from JSON string to types.List
-	if app.PreviewLabels != "" {
+	// Parse PreviewLabels from API response (json.RawMessage — can be null, string, or array)
+	if len(app.PreviewLabels) > 0 && string(app.PreviewLabels) != "null" {
 		var previewLabels []string
-		if err := json.Unmarshal([]byte(app.PreviewLabels), &previewLabels); err == nil {
+		if err := json.Unmarshal(app.PreviewLabels, &previewLabels); err == nil {
 			if listVal, diag := types.ListValueFrom(context.Background(), types.StringType, previewLabels); !diag.HasError() {
 				plan.PreviewLabels = listVal
 			}
@@ -1737,14 +1738,10 @@ func readApplicationIntoState(state *ApplicationResourceModel, app *client.Appli
 		}
 	}
 	if app.CpuLimit != "" {
-		if val, err := app.CpuLimit.Int64(); err == nil {
-			state.CpuLimit = types.Int64Value(val)
-		}
+		state.CpuLimit = types.StringValue(string(app.CpuLimit))
 	}
 	if app.CpuReservation != "" {
-		if val, err := app.CpuReservation.Int64(); err == nil {
-			state.CpuReservation = types.Int64Value(val)
-		}
+		state.CpuReservation = types.StringValue(string(app.CpuReservation))
 	}
 	if app.Command != "" {
 		state.Command = types.StringValue(app.Command)
@@ -1809,10 +1806,10 @@ func readApplicationIntoState(state *ApplicationResourceModel, app *client.Appli
 	if app.PreviewCustomCertResolver != "" {
 		state.PreviewCustomCertResolver = types.StringValue(app.PreviewCustomCertResolver)
 	}
-	// Parse PreviewLabels from JSON string to types.List
-	if app.PreviewLabels != "" {
+	// Parse PreviewLabels from API response (json.RawMessage)
+	if len(app.PreviewLabels) > 0 && string(app.PreviewLabels) != "null" {
 		var previewLabels []string
-		if err := json.Unmarshal([]byte(app.PreviewLabels), &previewLabels); err == nil {
+		if err := json.Unmarshal(app.PreviewLabels, &previewLabels); err == nil {
 			if listVal, diags := types.ListValueFrom(context.Background(), types.StringType, previewLabels); !diags.HasError() {
 				state.PreviewLabels = listVal
 			}
