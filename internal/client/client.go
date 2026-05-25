@@ -709,6 +709,18 @@ func (c *DokployClient) DeleteEnvironment(id string) error {
 	return err
 }
 
+func (c *DokployClient) ListEnvironmentsByProject(projectID string) ([]Environment, error) {
+	resp, err := c.doRequest("GET", fmt.Sprintf("environment.byProjectId?projectId=%s", url.QueryEscape(projectID)), nil)
+	if err != nil {
+		return nil, err
+	}
+	var result []Environment
+	if err := json.Unmarshal(resp, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 // --- Application ---
 
 // StringOrStringSlice round-trips a value that Dokploy may return as either a
