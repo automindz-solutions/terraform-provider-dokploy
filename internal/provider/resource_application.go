@@ -1158,6 +1158,15 @@ func (r *ApplicationResource) saveSourceProvider(appID string, plan *Application
 		if buildPath == "" {
 			buildPath = plan.BuildPath.ValueString()
 		}
+		// Convert watch_paths from types.List to []string
+		var watchPaths []string
+		if !plan.WatchPaths.IsNull() && !plan.WatchPaths.IsUnknown() {
+			diags := plan.WatchPaths.ElementsAs(context.Background(), &watchPaths, false)
+			if diags.HasError() {
+				watchPaths = nil
+			}
+		}
+
 		input := client.SaveGithubProviderInput{
 			ApplicationID:    appID,
 			Repository:       repository,
@@ -1167,6 +1176,7 @@ func (r *ApplicationResource) saveSourceProvider(appID string, plan *Application
 			GithubId:         plan.GithubId.ValueString(),
 			EnableSubmodules: plan.EnableSubmodules.ValueBool(),
 			TriggerType:      plan.TriggerType.ValueString(),
+			WatchPaths:       watchPaths,
 		}
 		return r.client.SaveGithubProvider(input)
 
