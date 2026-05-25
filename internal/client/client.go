@@ -970,6 +970,7 @@ func (c *DokployClient) UpdateApplicationGeneral(app Application) (*Application,
 
 	// Boolean fields - always include
 	payload["autoDeploy"] = app.AutoDeploy
+	payload["isPreviewDeploymentsActive"] = app.IsPreviewDeploymentsActive
 
 	// Numeric fields
 	if app.Replicas > 0 {
@@ -987,6 +988,27 @@ func (c *DokployClient) UpdateApplicationGeneral(app Application) (*Application,
 	}
 	if app.CpuReservation != "" {
 		payload["cpuReservation"] = string(app.CpuReservation)
+	}
+
+	// Preview deployment fields
+	if app.PreviewEnv != "" {
+		payload["previewEnv"] = app.PreviewEnv
+	}
+	if app.PreviewWildcard != "" {
+		payload["previewWildcard"] = app.PreviewWildcard
+	}
+	if app.PreviewPort > 0 {
+		payload["previewPort"] = app.PreviewPort
+	}
+	payload["previewHttps"] = app.PreviewHttps
+	if app.PreviewPath != "" {
+		payload["previewPath"] = app.PreviewPath
+	}
+	if app.PreviewCertificateType != "" {
+		payload["previewCertificateType"] = app.PreviewCertificateType
+	}
+	if app.PreviewLimit > 0 {
+		payload["previewLimit"] = app.PreviewLimit
 	}
 
 	// String fields
