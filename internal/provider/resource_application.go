@@ -827,7 +827,7 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	} else if traefikConfig != "" {
 		state.TraefikConfig = types.StringValue(traefikConfig)
 	} else {
-		state.TraefikConfig = types.StringNull()
+		state.TraefikConfig = types.StringValue("")
 	}
 
 	diags = resp.State.Set(ctx, state)
@@ -910,7 +910,7 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 	} else if traefikConfig != "" {
 		plan.TraefikConfig = types.StringValue(traefikConfig)
 	} else {
-		plan.TraefikConfig = types.StringNull()
+		plan.TraefikConfig = types.StringValue("")
 	}
 
 	diags = resp.State.Set(ctx, plan)
