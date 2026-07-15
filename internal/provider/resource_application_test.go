@@ -5,8 +5,20 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
+
+func TestApplicationStatusIsStableAcrossSettingsUpdate(t *testing.T) {
+	state := ApplicationResourceModel{ApplicationStatus: types.StringValue("done")}
+	plan := ApplicationResourceModel{ApplicationStatus: types.StringValue("idle")}
+
+	preserveApplicationStatus(&plan, &state)
+
+	if got := plan.ApplicationStatus.ValueString(); got != "done" {
+		t.Fatalf("expected planned application status to remain stable, got %q", got)
+	}
+}
 
 func TestAccApplicationResource(t *testing.T) {
 	host := os.Getenv("DOKPLOY_HOST")

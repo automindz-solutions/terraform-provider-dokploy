@@ -799,6 +799,10 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(diags...)
 }
 
+func preserveApplicationStatus(plan, state *ApplicationResourceModel) {
+	plan.ApplicationStatus = state.ApplicationStatus
+}
+
 func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state ApplicationResourceModel
 	diags := req.State.Get(ctx, &state)
@@ -903,6 +907,7 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Update plan with values from the API
 	updatePlanFromApplication(&plan, finalApp)
+	preserveApplicationStatus(&plan, &state)
 
 	// Read traefik config separately (not part of application response)
 	traefikConfig, err := r.client.ReadTraefikConfig(appID)
