@@ -303,9 +303,9 @@ func (r *RedisResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	// Update required and computed fields.
-	// Note: AppNamePrefix is not updated from server - it's user-provided config.
 	state.Name = types.StringValue(redis.Name)
 	state.AppName = types.StringValue(redis.AppName)
+	reconcileRedisImportPrefix(&state)
 	state.EnvironmentID = types.StringValue(redis.EnvironmentID)
 	state.ApplicationStatus = types.StringValue(redis.ApplicationStatus)
 
@@ -348,6 +348,12 @@ func (r *RedisResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
+}
+
+func reconcileRedisImportPrefix(state *RedisResourceModel) {
+	if state.AppNamePrefix.IsNull() || state.AppNamePrefix.IsUnknown() {
+		state.AppNamePrefix = state.AppName
+	}
 }
 
 func (r *RedisResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

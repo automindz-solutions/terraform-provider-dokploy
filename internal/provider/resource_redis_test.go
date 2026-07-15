@@ -5,8 +5,35 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
+
+func TestReconcileRedisImportPrefix(t *testing.T) {
+	state := RedisResourceModel{
+		AppName:       types.StringValue("hostbot-redis-5ls7ng"),
+		AppNamePrefix: types.StringNull(),
+	}
+
+	reconcileRedisImportPrefix(&state)
+
+	if got := state.AppNamePrefix.ValueString(); got != "hostbot-redis-5ls7ng" {
+		t.Fatalf("expected imported prefix to match app name, got %q", got)
+	}
+}
+
+func TestReconcileRedisImportPrefixPreservesConfiguration(t *testing.T) {
+	state := RedisResourceModel{
+		AppName:       types.StringValue("hostbot-redis-5ls7ng"),
+		AppNamePrefix: types.StringValue("hostbot-redis"),
+	}
+
+	reconcileRedisImportPrefix(&state)
+
+	if got := state.AppNamePrefix.ValueString(); got != "hostbot-redis" {
+		t.Fatalf("expected configured prefix to be preserved, got %q", got)
+	}
+}
 
 func TestAccRedisResource(t *testing.T) {
 	host := os.Getenv("DOKPLOY_HOST")
